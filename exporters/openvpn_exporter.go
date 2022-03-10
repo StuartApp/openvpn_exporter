@@ -209,9 +209,7 @@ func (e *OpenVPNExporter) collectServerStatusFromReader(statusPath string, file 
 		} else if fields[0] == "TITLE" && len(fields) == 2 {
 			// OpenVPN version number.
 		} else if header, ok := e.openvpnServerHeaders[fields[0]]; ok {
-			if fields[0] == "CLIENT_LIST" {
-				numberConnectedClient++
-			}
+
 			// Entry that depends on a preceding HEADERS directive.
 			columnNames, ok := headersFound[fields[0]]
 			if !ok {
@@ -228,6 +226,13 @@ func (e *OpenVPNExporter) collectServerStatusFromReader(statusPath string, file 
 			}
 			for i, column := range columnNames {
 				columnValues[column] = fields[i+1]
+			}
+
+			if columnValues["Common Name"] == "UNDEF" || columnValues["Common Name"] == "" {
+				continue // skip this 'client'
+			}
+			if fields[0] == "CLIENT_LIST" {
+				numberConnectedClient++
 			}
 
 			// Extract columns that should act as entry labels.
